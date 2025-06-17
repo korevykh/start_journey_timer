@@ -207,14 +207,14 @@
                 height: calc(100vw * 9 / 16 - 20px); /* Фиксированная высота для моб. */
                 margin-top: 1rem; /* Скорректировать отступ */
                 margin-bottom: 1rem; /* Скорректировать отступ */
-                padding-left: 25px; /* Увеличиваем отступ для кнопок на мобильных */
-                padding-right: 25px;
+                padding-left: 60px; /* Увеличиваем отступ для кнопок на мобильных */
+                padding-right: 60px;
             }
             .prev, .next {
-                width: 25px;
+                width: 25px; /* Возвращаем к нормальному размеру кнопок */
                 height: 25px;
-                margin-top: -12.5px;
-                font-size: 16px;
+                margin-top: -12.5px; /* Корректируем margin-top для нового размера */
+                font-size: 16px; /* Возвращаем к нормальному размеру шрифта иконки */
                 left: 10px; /* Увеличиваем отступ от края padding */
                 right: 10px;
             }
