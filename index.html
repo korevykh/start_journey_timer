@@ -12,13 +12,37 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
+            position: relative;
+            background: url('лого.jpg') repeat;
+            background-size: 20%;
+        }
+        .header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .logo {
+            position: static;
+            width: 150px;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .header-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .container {
             text-align: center;
             padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.85);
             border-radius: 15px;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
@@ -120,6 +144,17 @@
             to {opacity: 1}
         }
         @media (max-width: 768px) {
+            .logo {
+                width: 100px;
+            }
+            .header-flex {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            .header-content {
+                align-items: center;
+            }
             .timer {
                 font-size: 2rem;
             }
@@ -131,23 +166,28 @@
 </head>
 <body>
     <div class="container">
-        <h1 style="text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">До старта осталось:</h1>
-        <div class="timer">
-            <div class="timer-block">
-                <span id="days">00</span>
-                <div class="timer-label">дней</div>
-            </div>
-            <div class="timer-block">
-                <span id="hours">00</span>
-                <div class="timer-label">часов</div>
-            </div>
-            <div class="timer-block">
-                <span id="minutes">00</span>
-                <div class="timer-label">минут</div>
-            </div>
-            <div class="timer-block">
-                <span id="seconds">00</span>
-                <div class="timer-label">секунд</div>
+        <div class="header-flex">
+            <!-- <img src="лого.jpg" alt="Логотип" class="logo"> -->
+            <div class="header-content">
+                <h1 style="text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-bottom: 1.5rem;">До старта осталось:</h1>
+                <div class="timer">
+                    <div class="timer-block">
+                        <span id="days">00</span>
+                        <div class="timer-label">дней</div>
+                    </div>
+                    <div class="timer-block">
+                        <span id="hours">00</span>
+                        <div class="timer-label">часов</div>
+                    </div>
+                    <div class="timer-block">
+                        <span id="minutes">00</span>
+                        <div class="timer-label">минут</div>
+                    </div>
+                    <div class="timer-block">
+                        <span id="seconds">00</span>
+                        <div class="timer-label">секунд</div>
+                    </div>
+                </div>
             </div>
         </div>
         <img src="маршрут.png" alt="Маршрут" class="route-image">
@@ -185,6 +225,45 @@
             <div class="slide fade">
                 <img src="photo-presentation/10.jpeg" alt="Фото 10">
             </div>
+            <div class="slide fade">
+                <img src="photo-presentation/11.jpg" alt="Фото 11">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/12.jpg" alt="Фото 12">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/13.jpg" alt="Фото 13">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/14.jpg" alt="Фото 14">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/15.jpg" alt="Фото 15">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/16.jpg" alt="Фото 16">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/17.jpg" alt="Фото 17">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/18.jpg" alt="Фото 18">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/19.jpg" alt="Фото 19">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/20.jpg" alt="Фото 20">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/21.jpg" alt="Фото 21">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/22.jpg" alt="Фото 22">
+            </div>
+            <div class="slide fade">
+                <img src="photo-presentation/23.jpg" alt="Фото 23">
+            </div>
 
             <a class="prev" onclick="plusSlides(-1)">❮</a>
             <a class="next" onclick="plusSlides(1)">❯</a>
@@ -201,19 +280,36 @@
             <span class="dot" onclick="currentSlide(8)"></span>
             <span class="dot" onclick="currentSlide(9)"></span>
             <span class="dot" onclick="currentSlide(10)"></span>
+            <span class="dot" onclick="currentSlide(11)"></span>
+            <span class="dot" onclick="currentSlide(12)"></span>
+            <span class="dot" onclick="currentSlide(13)"></span>
+            <span class="dot" onclick="currentSlide(14)"></span>
+            <span class="dot" onclick="currentSlide(15)"></span>
+            <span class="dot" onclick="currentSlide(16)"></span>
+            <span class="dot" onclick="currentSlide(17)"></span>
+            <span class="dot" onclick="currentSlide(18)"></span>
+            <span class="dot" onclick="currentSlide(19)"></span>
+            <span class="dot" onclick="currentSlide(20)"></span>
+            <span class="dot" onclick="currentSlide(21)"></span>
+            <span class="dot" onclick="currentSlide(22)"></span>
+            <span class="dot" onclick="currentSlide(23)"></span>
         </div>
     </div>
     <script src="script.js"></script>
     <script>
         let slideIndex = 1;
+        let slideshowInterval;
         showSlides(slideIndex);
+        startSlideshowInterval();
 
         function plusSlides(n) {
             showSlides(slideIndex += n);
+            resetSlideshowInterval();
         }
 
         function currentSlide(n) {
             showSlides(slideIndex = n);
+            resetSlideshowInterval();
         }
 
         function showSlides(n) {
@@ -235,10 +331,16 @@
             dots[slideIndex-1].className += " active";
         }
 
-        // Автоматическое переключение слайдов каждые 5 секунд
-        setInterval(function() {
-            plusSlides(1);
-        }, 5000);
+        function startSlideshowInterval() {
+            slideshowInterval = setInterval(function() {
+                plusSlides(1);
+            }, 5000);
+        }
+
+        function resetSlideshowInterval() {
+            clearInterval(slideshowInterval);
+            startSlideshowInterval();
+        }
     </script>
 </body>
 </html> 
