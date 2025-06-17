@@ -1,5 +1,5 @@
-// Устанавливаем целевую дату (18 июля 2025, 20:20 UTC+3)
-const targetDate = new Date('2025-07-18T20:20:00+03:00');
+// Устанавливаем целевую дату (18 июля 2025, 20:30 UTC+3)
+const targetDate = new Date('2025-07-18T20:30:00+03:00');
 
 function updateTimer() {
     const currentDate = new Date();
