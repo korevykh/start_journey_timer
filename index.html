@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таймер обратного отсчета</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        .timer-block {
+            display: inline-block;
+            margin: 0 1rem;
+        }
+        .timer-label {
+            font-size: 1rem;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+        h1 {
+            margin-bottom: 2rem;
+        }
+        .route-image {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            margin: 2rem 0;
+            border-radius: 10px;
+        }
+        @media (max-width: 768px) {
+            .timer {
+                font-size: 2rem;
+            }
+            .timer-block {
+                margin: 0 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>До старта осталось:</h1>
+        <div class="timer">
+            <div class="timer-block">
+                <span id="days">00</span>
+                <div class="timer-label">дней</div>
+            </div>
+            <div class="timer-block">
+                <span id="hours">00</span>
+                <div class="timer-label">часов</div>
+            </div>
+            <div class="timer-block">
+                <span id="minutes">00</span>
+                <div class="timer-label">минут</div>
+            </div>
+            <div class="timer-block">
+                <span id="seconds">00</span>
+                <div class="timer-label">секунд</div>
+            </div>
+        </div>
+        <img src="маршрут.png" alt="Маршрут" class="route-image">
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
