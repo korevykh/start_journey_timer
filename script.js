@@ -247,7 +247,6 @@ function renderRiversTable(data) {
     if (user) {
       const th = document.createElement('th');
       th.className = 'action-col sortable';
-      th.style.background = 'linear-gradient(90deg, #232526 0%, #414345 100%)';
       th.style.color = '#fff';
       th.style.fontWeight = '700';
       th.style.whiteSpace = 'nowrap';
