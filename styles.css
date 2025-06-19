@@ -257,4 +257,16 @@ h2 {
         left: 10px;
         right: 10px;
     }
-} 
+}
+
+#riversTable th {
+    background: linear-gradient(90deg, #232526 0%, #414345 100%);
+    color: #fff;
+    font-weight: 700;
+}
+
+#riversTable th:nth-child(13), #riversTable td:nth-child(13) { min-width: 200px; white-space: nowrap; }
+
+#riversTable th:nth-child(14), #riversTable td:nth-child(14) { min-width: 200px; width: 200px; white-space: nowrap; }
+
+.action-col, #riversTable td.action-col { min-width: 240px; width: 240px; white-space: nowrap; } 

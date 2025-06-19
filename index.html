@@ -5,185 +5,360 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Речные ЕЖИ 2025</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      #authModal * {
+        font-family: 'Montserrat', Arial, sans-serif !important;
+      }
+      #authModal input[type="email"],
+      #authModal input[type="password"] {
+        border-radius: 20px;
+        border: 1px solid #888;
+        padding: 0.75rem 1.2rem;
+        font-size: 1rem;
+        margin-bottom: 0.7rem;
+        outline: none;
+        transition: border 0.2s;
+      }
+      #authModal input[type="email"]:focus,
+      #authModal input[type="password"]:focus {
+        border: 1.5px solid #fff;
+      }
+      #authModal button {
+        border-radius: 20px;
+        font-family: 'Montserrat', Arial, sans-serif;
+        font-size: 1rem;
+        padding: 0.7rem 1.2rem;
+        margin-bottom: 0.7rem;
+        border: none;
+        transition: background 0.2s, color 0.2s;
+      }
+      #authModal button:active {
+        filter: brightness(0.95);
+      }
+      #authModal h3 {
+        font-family: 'Montserrat', Arial, sans-serif;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+      #authModal .modal-content {
+        border-radius: 24px;
+      }
+      #riversTable {
+        border-collapse: collapse;
+        width: 100%;
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        font-family: 'Montserrat', Arial, sans-serif;
+      }
+      #riversTable th, #riversTable td {
+        border: 1px solid #444;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.5rem 0.7rem;
+        word-break: break-word;
+        word-wrap: break-word;
+        white-space: normal;
+        font-size: 0.97rem;
+      }
+      #riversTable th {
+        background: rgba(255,255,255,0.08);
+        font-weight: 700;
+      }
+      #riversTable tr:nth-child(even) {
+        background: rgba(255,255,255,0.03);
+      }
+      #riversTable th:nth-child(1), #riversTable td:nth-child(1) { min-width: 120px; }
+      #riversTable th:nth-child(2), #riversTable td:nth-child(2) { min-width: 100px; }
+      #riversTable th:nth-child(3), #riversTable td:nth-child(3) { min-width: 160px; }
+      #riversTable th:nth-child(4), #riversTable td:nth-child(4) { min-width: 110px; }
+      #riversTable th:nth-child(5), #riversTable td:nth-child(5) { min-width: 140px; }
+      #riversTable th:nth-child(6), #riversTable td:nth-child(6) { min-width: 110px; }
+      #riversTable th:nth-child(7), #riversTable td:nth-child(7) { min-width: 170px; }
+      #riversTable th:nth-child(8), #riversTable td:nth-child(8) { min-width: 180px; }
+      #riversTable th:nth-child(9), #riversTable td:nth-child(9) { min-width: 180px; }
+      #riversTable th:nth-child(10), #riversTable td:nth-child(10) { min-width: 120px; }
+      #riversTable th:nth-child(11), #riversTable td:nth-child(11) { min-width: 100px; }
+      /* Горизонтальный скролл для таблицы */
+      #riversContent > div > div { overflow-x: auto; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-flex">
-            <!-- <img src="лого.jpg" alt="Логотип" class="logo"> -->
-            <div class="header-content">
-                <h1>До старта осталось:</h1>
-                <div class="timer">
-                    <div class="timer-block">
-                        <span id="days">00</span>
-                        <div class="timer-label">дней</div>
-                    </div>
-                    <div class="timer-block">
-                        <span id="hours">00</span>
-                        <div class="timer-label">часов</div>
-                    </div>
-                    <div class="timer-block">
-                        <span id="minutes">00</span>
-                        <div class="timer-label">минут</div>
-                    </div>
-                    <div class="timer-block">
-                        <span id="seconds">00</span>
-                        <div class="timer-label">секунд</div>
+    <!-- Навигационная плашка -->
+    <nav id="mainNav" style="width:100vw;max-width:100%;position:fixed;top:0;left:0;z-index:2000;background:rgba(20,20,20,0.97);box-shadow:0 2px 12px #000;display:flex;flex-direction:row;align-items:center;height:64px;">
+      <div style="flex:1 1 0%;"></div>
+      <div id="navTabs" style="display:flex;gap:2rem;justify-content:center;align-items:center;flex:0 1 auto;">
+        <div class="nav-tab active" id="tabMain" style="padding:0.7rem 2.2rem;cursor:pointer;font-family:'Montserrat',Arial,sans-serif;font-size:1.1rem;font-weight:700;color:#fff;border-radius:18px 18px 0 0;background:rgba(255,255,255,0.08);transition:background 0.2s;">Главная</div>
+        <div class="nav-tab" id="tabRivers" style="padding:0.7rem 2.2rem;cursor:pointer;font-family:'Montserrat',Arial,sans-serif;font-size:1.1rem;font-weight:700;color:#fff;border-radius:18px 18px 0 0;background:transparent;transition:background 0.2s;">Реки</div>
+      </div>
+      <div style="flex:1 1 0%;display:flex;justify-content:flex-end;align-items:center;min-width:120px;padding-right:32px;box-sizing:border-box;">
+        <div id="userPanel" style="display:flex;align-items:center;gap:8px;position:relative;min-width:80px;min-height:40px;">
+          <span id="userEmail" style="display:none;color:#fff;font-size:1rem;line-height:32px;"></span>
+          <span id="userIcon" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,0.7);border-radius:50%;box-shadow:0 2px 8px #000;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M12 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4z"/>
+            </svg>
+          </span>
+          <div id="userMenu" style="display:none;position:absolute;top:40px;right:0;background:#222;border-radius:8px;box-shadow:0 2px 8px #000;padding:0.5rem 0;min-width:160px;">
+            <div id="menuLogin" style="padding:0.5rem 1rem;cursor:pointer;">Войти</div>
+            <div id="menuRegister" style="padding:0.5rem 1rem;cursor:pointer;">Зарегистрироваться</div>
+            <div id="menuLogout" style="padding:0.5rem 1rem;cursor:pointer;display:none;">Выйти</div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div style="height:64px;"></div> <!-- отступ под фиксированную навигацию -->
+
+    <!-- Контент Главная -->
+    <div id="mainContent">
+        <div class="container">
+            <div class="header-flex">
+                <!-- <img src="лого.jpg" alt="Логотип" class="logo"> -->
+                <div class="header-content">
+                    <h1>До старта осталось:</h1>
+                    <div class="timer">
+                        <div class="timer-block">
+                            <span id="days">00</span>
+                            <div class="timer-label">дней</div>
+                        </div>
+                        <div class="timer-block">
+                            <span id="hours">00</span>
+                            <div class="timer-label">часов</div>
+                        </div>
+                        <div class="timer-block">
+                            <span id="minutes">00</span>
+                            <div class="timer-label">минут</div>
+                        </div>
+                        <div class="timer-block">
+                            <span id="seconds">00</span>
+                            <div class="timer-label">секунд</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <img src="маршрут.png" alt="Маршрут" class="route-image">
-        
-        <h2>ЛЕГЕНДЫ ЕЖЕЙ</h2>
-        
-        <div class="slideshow-container">
-            <div class="slide fade">
-                <img src="photo-presentation/1.jpeg" alt="Фото 1">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/2.jpeg" alt="Фото 2">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/3.jpeg" alt="Фото 3">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/4.jpeg" alt="Фото 4">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/5.jpeg" alt="Фото 5">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/6.jpeg" alt="Фото 6">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/7.jpeg" alt="Фото 7">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/8.jpeg" alt="Фото 8">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/9.jpeg" alt="Фото 9">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/10.jpeg" alt="Фото 10">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/11.jpg" alt="Фото 11">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/12.jpg" alt="Фото 12">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/13.jpg" alt="Фото 13">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/14.jpg" alt="Фото 14">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/15.jpg" alt="Фото 15">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/16.jpg" alt="Фото 16">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/17.jpg" alt="Фото 17">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/18.jpg" alt="Фото 18">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/19.jpg" alt="Фото 19">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/20.jpg" alt="Фото 20">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/21.jpg" alt="Фото 21">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/22.jpg" alt="Фото 22">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/23.jpg" alt="Фото 23">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/24.jpg" alt="Фото 24">
-            </div>
-            <div class="slide fade">
-                <img src="photo-presentation/25.jpg" alt="Фото 25">
+            <img src="маршрут.png" alt="Маршрут" class="route-image">
+            
+            <h2>ЛЕГЕНДЫ ЕЖЕЙ</h2>
+            
+            <div class="slideshow-container">
+                <div class="slide fade">
+                    <img src="photo-presentation/1.jpeg" alt="Фото 1">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/2.jpeg" alt="Фото 2">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/3.jpeg" alt="Фото 3">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/4.jpeg" alt="Фото 4">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/5.jpeg" alt="Фото 5">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/6.jpeg" alt="Фото 6">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/7.jpeg" alt="Фото 7">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/8.jpeg" alt="Фото 8">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/9.jpeg" alt="Фото 9">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/10.jpeg" alt="Фото 10">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/11.jpg" alt="Фото 11">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/12.jpg" alt="Фото 12">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/13.jpg" alt="Фото 13">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/14.jpg" alt="Фото 14">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/15.jpg" alt="Фото 15">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/16.jpg" alt="Фото 16">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/17.jpg" alt="Фото 17">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/18.jpg" alt="Фото 18">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/19.jpg" alt="Фото 19">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/20.jpg" alt="Фото 20">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/21.jpg" alt="Фото 21">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/22.jpg" alt="Фото 22">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/23.jpg" alt="Фото 23">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/24.jpg" alt="Фото 24">
+                </div>
+                <div class="slide fade">
+                    <img src="photo-presentation/25.jpg" alt="Фото 25">
+                </div>
+
+                <a class="prev" onclick="plusSlides(-1)">❮</a>
+                <a class="next" onclick="plusSlides(1)">❯</a>
             </div>
 
-            <a class="prev" onclick="plusSlides(-1)">❮</a>
-            <a class="next" onclick="plusSlides(1)">❯</a>
-        </div>
-
-        <div class="dots">
-            <span class="dot" onclick="currentSlide(1)"></span>
-            <span class="dot" onclick="currentSlide(2)"></span>
-            <span class="dot" onclick="currentSlide(3)"></span>
-            <span class="dot" onclick="currentSlide(4)"></span>
-            <span class="dot" onclick="currentSlide(5)"></span>
-            <span class="dot" onclick="currentSlide(6)"></span>
-            <span class="dot" onclick="currentSlide(7)"></span>
-            <span class="dot" onclick="currentSlide(8)"></span>
-            <span class="dot" onclick="currentSlide(9)"></span>
-            <span class="dot" onclick="currentSlide(10)"></span>
-            <span class="dot" onclick="currentSlide(11)"></span>
-            <span class="dot" onclick="currentSlide(12)"></span>
-            <span class="dot" onclick="currentSlide(13)"></span>
-            <span class="dot" onclick="currentSlide(14)"></span>
-            <span class="dot" onclick="currentSlide(15)"></span>
-            <span class="dot" onclick="currentSlide(16)"></span>
-            <span class="dot" onclick="currentSlide(17)"></span>
-            <span class="dot" onclick="currentSlide(18)"></span>
-            <span class="dot" onclick="currentSlide(19)"></span>
-            <span class="dot" onclick="currentSlide(20)"></span>
-            <span class="dot" onclick="currentSlide(21)"></span>
-            <span class="dot" onclick="currentSlide(22)"></span>
-            <span class="dot" onclick="currentSlide(23)"></span>
-            <span class="dot" onclick="currentSlide(24)"></span>
-            <span class="dot" onclick="currentSlide(25)"></span>
-        </div>
-
-        <div class="audio-player-container" style="margin-top: 2rem; margin-bottom: 2rem; text-align: center; width: 100%; max-width: 600px; background: rgba(0,0,0,0.85); border-radius: 10px; padding: 1rem; box-sizing: border-box; margin-left: auto; margin-right: auto;">
-            <h3 style="margin-bottom: 1rem; text-transform: uppercase;">РАДИО ЕЖЕЙ</h3>
-            <div style="font-size: 1.1rem; color: #eee; margin-bottom: 15px;">
-                <span id="currentTrackName"></span>
-            </div>
-            <audio id="audioPlayer" style="display: none;">
-                <source src="music/Штукатурка - Поход.mp3" type="audio/mpeg">
-                <source src="music/Радиопомехи - Заебал улыбаться.mp3" type="audio/mpeg">
-                <source src="music/Аким Апачев - Лето и арбалеты.mp3" type="audio/mpeg">
-                Ваш браузер не поддерживает воспроизведение аудио.
-            </audio>
-
-            <div class="controls" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <button id="prevButton" style="background: #555; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">&#9664;&#9664;</button>
-                <button id="playPauseButton" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1.1rem;">&#9654;</button>
-                <button id="nextButton" style="background: #555; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">&#9654;&#9654;</button>
+            <div class="dots">
+                <span class="dot" onclick="currentSlide(1)"></span>
+                <span class="dot" onclick="currentSlide(2)"></span>
+                <span class="dot" onclick="currentSlide(3)"></span>
+                <span class="dot" onclick="currentSlide(4)"></span>
+                <span class="dot" onclick="currentSlide(5)"></span>
+                <span class="dot" onclick="currentSlide(6)"></span>
+                <span class="dot" onclick="currentSlide(7)"></span>
+                <span class="dot" onclick="currentSlide(8)"></span>
+                <span class="dot" onclick="currentSlide(9)"></span>
+                <span class="dot" onclick="currentSlide(10)"></span>
+                <span class="dot" onclick="currentSlide(11)"></span>
+                <span class="dot" onclick="currentSlide(12)"></span>
+                <span class="dot" onclick="currentSlide(13)"></span>
+                <span class="dot" onclick="currentSlide(14)"></span>
+                <span class="dot" onclick="currentSlide(15)"></span>
+                <span class="dot" onclick="currentSlide(16)"></span>
+                <span class="dot" onclick="currentSlide(17)"></span>
+                <span class="dot" onclick="currentSlide(18)"></span>
+                <span class="dot" onclick="currentSlide(19)"></span>
+                <span class="dot" onclick="currentSlide(20)"></span>
+                <span class="dot" onclick="currentSlide(21)"></span>
+                <span class="dot" onclick="currentSlide(22)"></span>
+                <span class="dot" onclick="currentSlide(23)"></span>
+                <span class="dot" onclick="currentSlide(24)"></span>
+                <span class="dot" onclick="currentSlide(25)"></span>
             </div>
 
-            <div class="time-display" style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">
-                <span id="currentTime">00:00</span> / <span id="totalDuration">00:00</span>
-            </div>
+            <div class="audio-player-container" style="margin-top: 2rem; margin-bottom: 2rem; text-align: center; width: 100%; max-width: 600px; background: rgba(0,0,0,0.85); border-radius: 10px; padding: 1rem; box-sizing: border-box; margin-left: auto; margin-right: auto;">
+                <h3 style="margin-bottom: 1rem; text-transform: uppercase;">РАДИО ЕЖЕЙ</h3>
+                <div style="font-size: 1.1rem; color: #eee; margin-bottom: 15px;">
+                    <span id="currentTrackName"></span>
+                </div>
+                <audio id="audioPlayer" style="display: none;">
+                    <source src="music/Штукатурка - Поход.mp3" type="audio/mpeg">
+                    <source src="music/Радиопомехи - Заебал улыбаться.mp3" type="audio/mpeg">
+                    <source src="music/Аким Апачев - Лето и арбалеты.mp3" type="audio/mpeg">
+                    Ваш браузер не поддерживает воспроизведение аудио.
+                </audio>
 
-            <div class="progress-bar-container" style="width: 100%; background: #444; height: 8px; border-radius: 4px; cursor: pointer; margin-bottom: 15px;">
-                <div class="progress-bar" style="height: 100%; width: 0%; background: #007bff; border-radius: 4px;"></div>
-            </div>
+                <div class="controls" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <button id="prevButton" style="background: #555; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">&#9664;&#9664;</button>
+                    <button id="playPauseButton" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1.1rem;">&#9654;</button>
+                    <button id="nextButton" style="background: #555; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">&#9654;&#9654;</button>
+                </div>
 
-            <div class="volume-control-container" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <span style="color: #ccc; font-size: 0.9rem;">Громкость:</span>
-                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" style="width: 150px;">
-            </div>
+                <div class="time-display" style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">
+                    <span id="currentTime">00:00</span> / <span id="totalDuration">00:00</span>
+                </div>
 
-            <div class="playlist-header" style="margin-top: 1rem; margin-bottom: 10px;">
-                <button id="togglePlaylistButton" style="padding: 8px 15px; font-size: 0.9rem; cursor: pointer; background-color: #555; color: white; border: none; border-radius: 5px;">Трек-лист &#9776;</button>
+                <div class="progress-bar-container" style="width: 100%; background: #444; height: 8px; border-radius: 4px; cursor: pointer; margin-bottom: 15px;">
+                    <div class="progress-bar" style="height: 100%; width: 0%; background: #007bff; border-radius: 4px;"></div>
+                </div>
+
+                <div class="volume-control-container" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <span style="color: #ccc; font-size: 0.9rem;">Громкость:</span>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" style="width: 150px;">
+                </div>
+
+                <div class="playlist-header" style="margin-top: 1rem; margin-bottom: 10px;">
+                    <button id="togglePlaylistButton" style="padding: 8px 15px; font-size: 0.9rem; cursor: pointer; background-color: #555; color: white; border: none; border-radius: 5px;">Трек-лист &#9776;</button>
+                </div>
+                <ul id="playlist" style="list-style: none; padding: 0; margin: 0; background: rgba(0,0,0,0.5); border-radius: 5px; max-height: 150px; overflow-y: auto; display: none;">
+                </ul>
             </div>
-            <ul id="playlist" style="list-style: none; padding: 0; margin: 0; background: rgba(0,0,0,0.5); border-radius: 5px; max-height: 150px; overflow-y: auto; display: none;">
-            </ul>
         </div>
     </div>
-    <script src="script.js"></script>
+    <!-- Контент Реки (пока пусто) -->
+    <div id="riversContent" style="display:none;">
+      <div style="padding:2rem;max-width:1200px;margin:0 auto;">
+        <div id="activeFiltersBar" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;"></div>
+        <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1rem;">
+          <button id="addRiverBtn" style="display:none;padding:0.6rem 1.5rem;font-size:1.1rem;font-weight:700;background:#38ef7d;color:#222;border:none;border-radius:10px;cursor:pointer;box-shadow:0 2px 8px #0002;">Добавить</button>
+        </div>
+        <!-- Форма добавления/редактирования -->
+        <div id="addEditFormTitle" style="display:none;text-align:center;font-size:1.3rem;font-weight:700;margin-bottom:1rem;color:#38ef7d;"></div>
+        <form id="addRiverForm" style="display:none;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;background:rgba(0,0,0,0.5);padding:1rem 2rem;border-radius:16px;">
+          <input type="text" id="riverName" placeholder="Название реки" required style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverRegion" placeholder="Регион" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverSection" placeholder="Участок" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverKS" placeholder="КС порогов" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverRoute" placeholder="Поезд маршрут" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverTrainHours" placeholder="Поезд (часов)" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverTransfer" placeholder="Заброска/выброска (час)" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverLinks" placeholder="Ссылки на описание" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverComments" placeholder="Комментарии" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <input type="text" id="riverMap" placeholder="Карта" style="margin:0.5rem;border-radius:12px;padding:0.5rem 1rem;">
+          <div style="width:100%;display:flex;justify-content:center;gap:1.5rem;margin-top:1rem;">
+            <button type="submit" id="saveRiverBtn" style="border-radius:12px;padding:0.5rem 2rem;font-family:'Montserrat',Arial,sans-serif;background:#38ef7d;color:#222;font-weight:700;">Сохранить</button>
+            <button type="button" id="cancelAddRiverBtn" style="border-radius:12px;padding:0.5rem 2rem;font-family:'Montserrat',Arial,sans-serif;background:#eee;color:#222;font-weight:700;">Отменить</button>
+          </div>
+        </form>
+        <!-- Таблица рек -->
+        <div style="overflow-x:auto;">
+          <table id="riversTable" style="width:100%;border-collapse:collapse;background:rgba(0,0,0,0.7);color:#fff;font-family:'Montserrat',Arial,sans-serif;">
+            <thead>
+              <tr style="background:linear-gradient(90deg, #232526 0%, #414345 100%);">
+                <th data-col="name" class="sortable">Название <span class="filter-icon" data-col="name" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="region" class="sortable">Регион <span class="filter-icon" data-col="region" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="section" class="sortable">Участок <span class="filter-icon" data-col="section" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="ks" class="sortable">КС порогов <span class="filter-icon" data-col="ks" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="route" class="sortable">Поезд маршрут <span class="filter-icon" data-col="route" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="trainHours" class="sortable">Поезд (часов) <span class="filter-icon" data-col="trainHours" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="transfer" class="sortable">Заброска/выброска (час) <span class="filter-icon" data-col="transfer" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="links" class="sortable">Ссылки на описание <span class="filter-icon" data-col="links" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="comments" class="sortable">Комментарии <span class="filter-icon" data-col="comments" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="map" class="sortable">Карта <span class="filter-icon" data-col="map" style="margin-left:6px;cursor:pointer;vertical-align:middle;"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'><circle cx='11' cy='11' r='7' stroke='#fff' stroke-width='2'/><path d='M20 20l-3-3' stroke='#fff' stroke-width='2' stroke-linecap='round'/></svg></span></th>
+                <th data-col="lastEdit" class="sortable">Последнее изменение</th>
+              </tr>
+            </thead>
+            <tbody id="riversTableBody">
+              <!-- Данные будут подгружаться из Firestore -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Модальное окно авторизации -->
+    <div id="authModal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); justify-content:center; align-items:center;">
+        <div style="background:#222; padding:2rem; border-radius:10px; min-width:280px; max-width:90vw; box-shadow:0 4px 32px #000; position:relative;">
+            <button id="closeAuthModal" style="position:absolute; right:1rem; top:1rem; background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            <h3 style="margin-bottom:1rem;">Вход / Регистрация</h3>
+            <input id="authEmail" type="email" placeholder="Email" style="width:100%;margin-bottom:0.5rem;padding:0.5rem;">
+            <input id="authPassword" type="password" placeholder="Пароль" style="width:100%;margin-bottom:1rem;padding:0.5rem;">
+            <button id="registerBtn" style="width:100%;margin-bottom:0.5rem;background:#fff;color:#222;font-weight:bold;">Зарегистрироваться</button>
+            <button id="loginBtn" style="width:100%;margin-bottom:0.5rem;background:#fff;color:#222;font-weight:bold;">Войти</button>
+            <button id="googleAuthBtn" style="width:100%;margin-bottom:0.5rem;background:#fff;color:#222;border:1px solid #888;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:bold;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px;height:20px;vertical-align:middle;"> Войти через Google
+            </button>
+            <div id="authError" style="color:#ff6a6a;margin-top:1rem;"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         let slideIndex = 1;
         let slideshowInterval;
@@ -376,6 +551,18 @@
         // Инициализация плеера
         loadTrack(currentTrackIndex);
         populatePlaylist();
+
+        // Firebase SDK
+        const firebaseConfig = {
+            apiKey: "AIzaSyDagIJQMr_I6i6T_ZdkGwk09lIOZmgoKcQ",
+            authDomain: "riverhedgehogs.firebaseapp.com",
+            projectId: "riverhedgehogs",
+            storageBucket: "riverhedgehogs.firebasestorage.app",
+            messagingSenderId: "101156697117",
+            appId: "1:101156697117:web:755e1e1457a5d0ed9942f4"
+        };
+        firebase.initializeApp(firebaseConfig);
     </script>
+    <script src="script.js"></script>
 </body>
 </html> 
