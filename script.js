@@ -165,11 +165,28 @@ firebase.auth().onAuthStateChanged(user => {
   if (user) {
     if (userEmail) {
       userEmail.textContent = user.email;
-      userEmail.style.display = '';
+      userEmail.style.display = window.innerWidth >= 600 ? '' : 'none';
     }
     if (menuLogin) menuLogin.style.display = 'none';
     if (menuRegister) menuRegister.style.display = 'none';
     if (menuLogout) menuLogout.style.display = '';
+    // Добавляем email в userMenu на мобильных
+    let menuEmail = document.getElementById('menuUserEmail');
+    if (window.innerWidth < 600) {
+      if (!menuEmail) {
+        menuEmail = document.createElement('div');
+        menuEmail.id = 'menuUserEmail';
+        menuEmail.style.padding = '0.5rem 1rem';
+        menuEmail.style.color = '#38ef7d';
+        menuEmail.style.fontSize = '0.97rem';
+        menuEmail.style.wordBreak = 'break-all';
+        userMenu.insertBefore(menuEmail, userMenu.firstChild);
+      }
+      menuEmail.textContent = user.email;
+      menuEmail.style.display = '';
+    } else if (menuEmail) {
+      menuEmail.style.display = 'none';
+    }
   } else {
     if (userEmail) {
       userEmail.textContent = '';
@@ -178,6 +195,9 @@ firebase.auth().onAuthStateChanged(user => {
     if (menuLogin) menuLogin.style.display = '';
     if (menuRegister) menuRegister.style.display = '';
     if (menuLogout) menuLogout.style.display = 'none';
+    // Скрываем email в userMenu
+    let menuEmail = document.getElementById('menuUserEmail');
+    if (menuEmail) menuEmail.style.display = 'none';
   }
   if (userMenu) userMenu.style.display = 'none';
   loadRivers();
