@@ -12,7 +12,7 @@ body {
     margin: 0;
     color: white;
     position: relative;
-    background: url('лого.jpg') repeat;
+    background: url('assets/лого.jpg') repeat;
     background-size: 20%;
 }
 
