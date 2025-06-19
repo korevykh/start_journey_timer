@@ -42,26 +42,33 @@ const registerBtn = document.getElementById('registerBtn');
 const authError = document.getElementById('authError');
 const authEmail = document.getElementById('authEmail');
 const authPassword = document.getElementById('authPassword');
+const authPasswordRepeat = document.getElementById('authPasswordRepeat');
+const togglePassword = document.getElementById('togglePassword');
+const togglePasswordRepeat = document.getElementById('togglePasswordRepeat');
 const googleAuthBtn = document.getElementById('googleAuthBtn');
 const authModalTitle = document.querySelector('#authModal h3');
 
 function showAuthModal(isRegister = false) {
   authModal.style.display = 'flex';
   authError.textContent = '';
+  const passwordRepeatDiv = document.getElementById('authPasswordRepeat')?.parentElement;
   if (isRegister) {
     if (authModalTitle) authModalTitle.textContent = 'Регистрация';
     if (loginBtn) loginBtn.style.display = 'none';
     if (registerBtn) registerBtn.style.display = '';
+    if (passwordRepeatDiv) passwordRepeatDiv.style.display = '';
   } else {
     if (authModalTitle) authModalTitle.textContent = 'Вход';
     if (loginBtn) loginBtn.style.display = '';
     if (registerBtn) registerBtn.style.display = 'none';
+    if (passwordRepeatDiv) passwordRepeatDiv.style.display = 'none';
   }
 }
 function hideAuthModal() {
   authModal.style.display = 'none';
   authEmail.value = '';
   authPassword.value = '';
+  authPasswordRepeat.value = '';
   authError.textContent = '';
 }
 if (openAuthModalBtn) openAuthModalBtn.onclick = () => showAuthModal(false);
@@ -108,7 +115,25 @@ loginBtn.onclick = async function() {
     authError.textContent = translateAuthError(e);
   }
 };
+
+if (togglePassword && authPassword) {
+  togglePassword.onclick = function() {
+    authPassword.type = authPassword.type === 'password' ? 'text' : 'password';
+    togglePassword.querySelector('svg').style.fill = authPassword.type === 'password' ? '#888' : '#38ef7d';
+  };
+}
+if (togglePasswordRepeat && authPasswordRepeat) {
+  togglePasswordRepeat.onclick = function() {
+    authPasswordRepeat.type = authPasswordRepeat.type === 'password' ? 'text' : 'password';
+    togglePasswordRepeat.querySelector('svg').style.fill = authPasswordRepeat.type === 'password' ? '#888' : '#38ef7d';
+  };
+}
+
 registerBtn.onclick = async function() {
+  if (authPassword.value !== authPasswordRepeat.value) {
+    authError.textContent = 'Пароли не совпадают!';
+    return;
+  }
   try {
     await firebase.auth().createUserWithEmailAndPassword(authEmail.value, authPassword.value);
     hideAuthModal();
