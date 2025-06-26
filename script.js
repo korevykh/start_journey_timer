@@ -1,3 +1,16 @@
+// --- ИНИЦИАЛИЗАЦИЯ FIREBASE ---
+// Вставьте свои реальные значения из консоли Firebase!
+const firebaseConfig = {
+  apiKey: "AIzaSyDagIJQMr_I6i6T_ZdkGwk09lIOZmgoKcQ",
+  authDomain: "riverhedgehogs.firebaseapp.com",
+  projectId: "riverhedgehogs",
+  storageBucket: "riverhedgehogs.firebasestorage.app",
+  messagingSenderId: "101156697117",
+  appId: "1:101156697117:web:755e1e1457a5d0ed9942f4"
+};
+firebase.initializeApp(firebaseConfig);
+// --- КОНЕЦ ИНИЦИАЛИЗАЦИИ ---
+
 // Устанавливаем целевую дату (18 июля 2025, 20:30 UTC+3)
 const targetDate = new Date('2025-07-18T20:30:00+03:00');
 
@@ -77,7 +90,6 @@ window.onclick = function(e) {
   if (e.target === authModal) hideAuthModal();
 };
 
-// --- Перевод ошибок Firebase Auth на русский ---
 function translateAuthError(error) {
   if (!error || !error.code) return error.message || 'Неизвестная ошибка';
   switch (error.code) {
@@ -105,7 +117,6 @@ function translateAuthError(error) {
       return error.message || 'Ошибка авторизации.';
   }
 }
-// --- END Перевод ошибок ---
 
 loginBtn.onclick = async function() {
   try {
@@ -153,6 +164,7 @@ if (googleAuthBtn) {
     }
   };
 }
+// --- END Firebase Auth Modal ---
 
 // --- User Icon & Dropdown Menu ---
 const userIcon = document.getElementById('userIcon');
@@ -195,7 +207,6 @@ firebase.auth().onAuthStateChanged(user => {
     if (menuLogin) menuLogin.style.display = 'none';
     if (menuRegister) menuRegister.style.display = 'none';
     if (menuLogout) menuLogout.style.display = '';
-    // Добавляем email в userMenu на мобильных
     let menuEmail = document.getElementById('menuUserEmail');
     if (window.innerWidth < 600) {
       if (!menuEmail) {
@@ -220,7 +231,6 @@ firebase.auth().onAuthStateChanged(user => {
     if (menuLogin) menuLogin.style.display = '';
     if (menuRegister) menuRegister.style.display = '';
     if (menuLogout) menuLogout.style.display = 'none';
-    // Скрываем email в userMenu
     let menuEmail = document.getElementById('menuUserEmail');
     if (menuEmail) menuEmail.style.display = 'none';
   }
@@ -265,10 +275,9 @@ let currentSort = { col: null, dir: 1 };
 let currentFilters = {};
 let editRiverId = null;
 
-// Показывать форму только авторизованным
 firebase.auth().onAuthStateChanged(user => {
   if (addRiverForm) {
-    addRiverForm.style.display = 'none'; // всегда скрывать форму при смене авторизации
+    addRiverForm.style.display = 'none';
     addRiverForm.reset();
   }
   if (addRiverBtn) addRiverBtn.style.display = user ? '' : 'none';
@@ -284,7 +293,6 @@ const saveRiverBtn = document.getElementById('saveRiverBtn');
 function renderRiversTable(data) {
   riversTableBody.innerHTML = '';
   const user = firebase.auth().currentUser;
-  // --- Рендерим шапку с th для кнопок, если авторизован ---
   const theadRow = document.querySelector('#riversTable thead tr');
   if (theadRow) {
     const lastTh = theadRow.querySelector('th.action-col');
@@ -484,7 +492,6 @@ if (riversTableBody) {
       const doc = riversData.find(r => r.id === id);
       if (!doc) return;
       editRiverId = id;
-      // Заполняем форму
       addRiverForm.riverName.value = doc.name || '';
       addRiverForm.riverRegion.value = doc.region || '';
       addRiverForm.riverSection.value = doc.section || '';
@@ -512,7 +519,6 @@ if (riversTableBody) {
   };
 }
 
-// --- Сортировка ---
 const thTitles = {
   name: 'Название',
   region: 'Регион',
@@ -603,7 +609,7 @@ function attachFilterIconHandlers() {
 attachFilterIconHandlers();
 // --- END Firestore: Таблица рек ---
 
-// --- Глобальные функции для слайд-шоу ---
+// --- Глобальные переменные и функции для слайд-шоу ---
 let slideIndex = 1;
 let slideshowInterval;
 
@@ -641,42 +647,47 @@ window.resetSlideshowInterval = function() {
   window.startSlideshowInterval();
 }
 
-// --- Динамическая загрузка фото для слайд-шоу ---
-async function loadSlideshowPhotos() {
-  try {
-    const response = await fetch('assets/photo-presentation/photos.json');
-    if (!response.ok) throw new Error('Не удалось загрузить список фото');
-    const photoList = await response.json();
-    const slideshowContainer = document.querySelector('.slideshow-container');
-    const dotsContainer = document.querySelector('.dots');
-    if (!slideshowContainer || !dotsContainer) return;
-    // Удаляем старые слайды и точки
-    slideshowContainer.querySelectorAll('.slide').forEach(el => el.remove());
-    dotsContainer.innerHTML = '';
-    // Добавляем новые слайды
-    photoList.forEach((filename, idx) => {
-      const slideDiv = document.createElement('div');
-      slideDiv.className = 'slide fade';
-      const img = document.createElement('img');
-      img.src = `assets/photo-presentation/${filename}`;
-      img.alt = `Фото ${idx + 1}`;
-      slideDiv.appendChild(img);
-      slideshowContainer.insertBefore(slideDiv, slideshowContainer.querySelector('.prev'));
-      // Точки
-      const dot = document.createElement('span');
-      dot.className = 'dot';
-      dot.onclick = () => window.currentSlide(idx + 1);
-      dotsContainer.appendChild(dot);
+// --- Вызов динамической загрузки слайдов после загрузки DOM ---
+window.addEventListener('DOMContentLoaded', function() {
+  loadSlideshowPhotos();
+});
+
+// --- Динамическая загрузка фотографий для слайд-шоу ---
+window.loadSlideshowPhotos = function() {
+  fetch('assets/photo-presentation/photos.json')
+    .then(response => response.json())
+    .then(photos => {
+      const slideshowContainer = document.querySelector('.slideshow-container');
+      const dotsContainer = document.querySelector('.dots');
+      if (!slideshowContainer || !dotsContainer) return;
+      // Удаляем старые слайды и точки
+      slideshowContainer.querySelectorAll('.slide').forEach(e => e.remove());
+      dotsContainer.innerHTML = '';
+      // Добавляем новые слайды
+      photos.forEach((photo, idx) => {
+        const slideDiv = document.createElement('div');
+        slideDiv.className = 'slide fade';
+        const img = document.createElement('img');
+        img.src = `assets/photo-presentation/${photo}`;
+        img.alt = `Фото ${idx+1}`;
+        slideDiv.appendChild(img);
+        // Вставляем перед кнопками prev/next
+        const prevBtn = slideshowContainer.querySelector('.prev');
+        slideshowContainer.insertBefore(slideDiv, prevBtn);
+        // Точка
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.onclick = function() { window.currentSlide(idx+1); };
+        dotsContainer.appendChild(dot);
+      });
+      // Показываем первый слайд
+      window.showSlides(slideIndex = 1);
+      window.startSlideshowInterval();
+    })
+    .catch(err => {
+      console.error('Ошибка загрузки фотографий для слайд-шоу:', err);
     });
-    // Показываем первый слайд
-    slideIndex = 1;
-    window.showSlides(slideIndex);
-    window.startSlideshowInterval();
-  } catch (e) {
-    console.error('Ошибка загрузки фото для слайд-шоу:', e);
-  }
 }
-window.addEventListener('DOMContentLoaded', loadSlideshowPhotos);
 
 // --- JS для плеера (перенос из index.html) ---
 const audioPlayer = document.getElementById('audioPlayer');
