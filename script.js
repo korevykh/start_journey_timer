@@ -603,6 +603,44 @@ function attachFilterIconHandlers() {
 attachFilterIconHandlers();
 // --- END Firestore: Таблица рек ---
 
+// --- Глобальные функции для слайд-шоу ---
+let slideIndex = 1;
+let slideshowInterval;
+
+window.plusSlides = function(n) {
+  window.showSlides(slideIndex += n);
+  window.resetSlideshowInterval();
+}
+window.currentSlide = function(n) {
+  window.showSlides(slideIndex = n);
+  window.resetSlideshowInterval();
+}
+window.showSlides = function(n) {
+  let i;
+  let slides = document.getElementsByClassName("slide");
+  let dots = document.getElementsByClassName("dot");
+  if (slides.length === 0) return;
+  if (n > slides.length) {slideIndex = 1}
+  if (n < 1) {slideIndex = slides.length}
+  for (i = 0; i < slides.length; i++) {
+    slides[i].style.display = "none";
+  }
+  for (i = 0; i < dots.length; i++) {
+    dots[i].className = dots[i].className.replace(" active", "");
+  }
+  slides[slideIndex-1].style.display = "block";
+  dots[slideIndex-1].className += " active";
+}
+window.startSlideshowInterval = function() {
+  slideshowInterval = setInterval(function() {
+    window.plusSlides(1);
+  }, 5000);
+}
+window.resetSlideshowInterval = function() {
+  clearInterval(slideshowInterval);
+  window.startSlideshowInterval();
+}
+
 // --- Динамическая загрузка фото для слайд-шоу ---
 async function loadSlideshowPhotos() {
   try {
@@ -612,11 +650,9 @@ async function loadSlideshowPhotos() {
     const slideshowContainer = document.querySelector('.slideshow-container');
     const dotsContainer = document.querySelector('.dots');
     if (!slideshowContainer || !dotsContainer) return;
-
     // Удаляем старые слайды и точки
     slideshowContainer.querySelectorAll('.slide').forEach(el => el.remove());
     dotsContainer.innerHTML = '';
-
     // Добавляем новые слайды
     photoList.forEach((filename, idx) => {
       const slideDiv = document.createElement('div');
@@ -629,16 +665,141 @@ async function loadSlideshowPhotos() {
       // Точки
       const dot = document.createElement('span');
       dot.className = 'dot';
-      dot.onclick = () => currentSlide(idx + 1);
+      dot.onclick = () => window.currentSlide(idx + 1);
       dotsContainer.appendChild(dot);
     });
     // Показываем первый слайд
     slideIndex = 1;
-    showSlides(slideIndex);
+    window.showSlides(slideIndex);
+    window.startSlideshowInterval();
   } catch (e) {
     console.error('Ошибка загрузки фото для слайд-шоу:', e);
   }
 }
+window.addEventListener('DOMContentLoaded', loadSlideshowPhotos);
 
-// Загружаем фото при загрузке страницы
-window.addEventListener('DOMContentLoaded', loadSlideshowPhotos); 
+// --- JS для плеера (перенос из index.html) ---
+const audioPlayer = document.getElementById('audioPlayer');
+const playPauseButton = document.getElementById('playPauseButton');
+const prevButton = document.getElementById('prevButton');
+const nextButton = document.getElementById('nextButton');
+const progressBarContainer = document.querySelector('.progress-bar-container');
+const progressBar = document.querySelector('.progress-bar');
+const volumeSlider = document.getElementById('volumeSlider');
+const togglePlaylistButton = document.getElementById('togglePlaylistButton');
+const playlistElement = document.getElementById('playlist');
+const currentTimeSpan = document.getElementById('currentTime');
+const totalDurationSpan = document.getElementById('totalDuration');
+const currentTrackNameSpan = document.getElementById('currentTrackName');
+
+const audioSources = [
+  { name: 'Штукатурка - Поход', src: 'assets/music/Штукатурка - Поход.mp3' },
+  { name: 'Радиопомехи - Заебал улыбаться', src: 'assets/music/Радиопомехи - Заебал улыбаться.mp3' },
+  { name: 'Аким Апачев - Лето и арбалеты', src: 'assets/music/Аким Апачев - Лето и арбалеты.mp3' }
+];
+let currentTrackIndex = 0;
+let isPlaying = false;
+
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+  return `${formattedMinutes}:${formattedSeconds}`;
+}
+function loadTrack(index) {
+  audioPlayer.src = audioSources[index].src;
+  audioPlayer.load();
+  updatePlaylistHighlight(index);
+  currentTrackNameSpan.textContent = audioSources[index].name;
+}
+function playTrack() {
+  audioPlayer.play();
+  playPauseButton.innerHTML = '&#10074;&#10074;';
+  isPlaying = true;
+}
+function pauseTrack() {
+  audioPlayer.pause();
+  playPauseButton.innerHTML = '&#9654;';
+  isPlaying = false;
+}
+function nextTrack() {
+  currentTrackIndex = (currentTrackIndex + 1) % audioSources.length;
+  loadTrack(currentTrackIndex);
+  playTrack();
+}
+function prevTrack() {
+  currentTrackIndex = (currentTrackIndex - 1 + audioSources.length) % audioSources.length;
+  loadTrack(currentTrackIndex);
+  playTrack();
+}
+playPauseButton.addEventListener('click', () => {
+  if (isPlaying) {
+    pauseTrack();
+  } else {
+    playTrack();
+  }
+});
+prevButton.addEventListener('click', prevTrack);
+nextButton.addEventListener('click', nextTrack);
+volumeSlider.addEventListener('input', (e) => {
+  audioPlayer.volume = e.target.value;
+});
+audioPlayer.addEventListener('timeupdate', () => {
+  const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+  progressBar.style.width = `${progress}%`;
+  currentTimeSpan.textContent = formatTime(audioPlayer.currentTime);
+});
+audioPlayer.addEventListener('loadedmetadata', () => {
+  totalDurationSpan.textContent = formatTime(audioPlayer.duration);
+});
+progressBarContainer.addEventListener('click', (e) => {
+  const clickX = e.offsetX;
+  const width = progressBarContainer.offsetWidth;
+  const seekTime = (clickX / width) * audioPlayer.duration;
+  audioPlayer.currentTime = seekTime;
+});
+audioPlayer.addEventListener('ended', nextTrack);
+togglePlaylistButton.addEventListener('click', () => {
+  if (playlistElement.style.display === 'block') {
+    playlistElement.style.display = 'none';
+    togglePlaylistButton.innerHTML = 'Трек-лист &#9776;';
+  } else {
+    playlistElement.style.display = 'block';
+    togglePlaylistButton.innerHTML = 'Трек-лист &#10006;';
+  }
+});
+function populatePlaylist() {
+  playlistElement.innerHTML = '';
+  audioSources.forEach((track, index) => {
+    const listItem = document.createElement('li');
+    listItem.style.padding = '8px 10px';
+    listItem.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+    listItem.style.cursor = 'pointer';
+    listItem.style.textAlign = 'left';
+    listItem.style.fontSize = '0.85rem';
+    listItem.style.transition = 'background-color 0.2s ease';
+    listItem.textContent = track.name;
+    listItem.onclick = () => playSelectedTrack(index);
+    listItem.onmouseover = () => listItem.style.backgroundColor = 'rgba(255,255,255,0.1)';
+    listItem.onmouseout = () => listItem.style.backgroundColor = 'transparent';
+    playlistElement.appendChild(listItem);
+  });
+}
+function updatePlaylistHighlight(activeIndex) {
+  Array.from(playlistElement.children).forEach((item, index) => {
+    if (index === activeIndex) {
+      item.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    } else {
+      item.style.backgroundColor = 'transparent';
+    }
+  });
+}
+function playSelectedTrack(index) {
+  currentTrackIndex = index;
+  loadTrack(currentTrackIndex);
+  playTrack();
+}
+// Инициализация плеера
+loadTrack(currentTrackIndex);
+populatePlaylist(); 
