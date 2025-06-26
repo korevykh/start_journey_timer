@@ -601,4 +601,44 @@ function attachFilterIconHandlers() {
   });
 }
 attachFilterIconHandlers();
-// --- END Firestore: Таблица рек --- 
+// --- END Firestore: Таблица рек ---
+
+// --- Динамическая загрузка фото для слайд-шоу ---
+async function loadSlideshowPhotos() {
+  try {
+    const response = await fetch('assets/photo-presentation/photos.json');
+    if (!response.ok) throw new Error('Не удалось загрузить список фото');
+    const photoList = await response.json();
+    const slideshowContainer = document.querySelector('.slideshow-container');
+    const dotsContainer = document.querySelector('.dots');
+    if (!slideshowContainer || !dotsContainer) return;
+
+    // Удаляем старые слайды и точки
+    slideshowContainer.querySelectorAll('.slide').forEach(el => el.remove());
+    dotsContainer.innerHTML = '';
+
+    // Добавляем новые слайды
+    photoList.forEach((filename, idx) => {
+      const slideDiv = document.createElement('div');
+      slideDiv.className = 'slide fade';
+      const img = document.createElement('img');
+      img.src = `assets/photo-presentation/${filename}`;
+      img.alt = `Фото ${idx + 1}`;
+      slideDiv.appendChild(img);
+      slideshowContainer.insertBefore(slideDiv, slideshowContainer.querySelector('.prev'));
+      // Точки
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.onclick = () => currentSlide(idx + 1);
+      dotsContainer.appendChild(dot);
+    });
+    // Показываем первый слайд
+    slideIndex = 1;
+    showSlides(slideIndex);
+  } catch (e) {
+    console.error('Ошибка загрузки фото для слайд-шоу:', e);
+  }
+}
+
+// Загружаем фото при загрузке страницы
+window.addEventListener('DOMContentLoaded', loadSlideshowPhotos); 
