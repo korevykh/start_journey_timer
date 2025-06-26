@@ -1,0 +1,8 @@
+{
+  "name": "timer-project",
+  "version": "1.0.0",
+  "scripts": {
+    "generate-photos": "node generate-photos-json.js"
+  },
+  "dependencies": {}
+} 
