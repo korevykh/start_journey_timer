@@ -319,16 +319,7 @@ async function uploadPhoto(file) {
     uploadStatus.style.color = '#38ef7d';
     uploadStatus.textContent = 'Загрузка...';
     uploadPhotoBtn.disabled = true;
-
-    const url = await supabaseUpload(file);
-
-    await db.collection('photos').add({
-      url,
-      uploadedBy: firebase.auth().currentUser.email,
-      originalName: file.name,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
+    await supabaseUpload(file);
     uploadStatus.textContent = 'Фото загружено!';
     setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
     window.loadSlideshowPhotos();
@@ -760,8 +751,18 @@ function renderSlideshow(photoUrls) {
 
 window.loadSlideshowPhotos = async function() {
   try {
-    const snapshot = await db.collection('photos').orderBy('createdAt', 'asc').get();
-    const photos = snapshot.docs.map(d => d.data().url);
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${SUPABASE_BUCKET}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'created_at', order: 'asc' } })
+    });
+    const files = await res.json();
+    const photos = files
+      .filter(f => f.name && !f.name.endsWith('/'))
+      .map(f => `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(f.name)}`);
     renderSlideshow(photos);
   } catch (err) {
     console.error('Ошибка загрузки фотографий для слайд-шоу:', err);
