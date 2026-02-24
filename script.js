@@ -290,9 +290,28 @@ firebase.auth().onAuthStateChanged(user => {
 const db = firebase.firestore();
 const riversCollection = db.collection('rivers');
 
-const IMGBB_API_KEY = '1ad85acd3ced435a12c44950e9e62d72';
+const SUPABASE_URL = 'https://mjbvsmvghqubdwkfgyvg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qYnZzbXZnaHF1YmR3a2ZneXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Mzk5NTUsImV4cCI6MjA4NzUxNTk1NX0.s0WMpvN7M6ieg5l1tg3mVkcIXjUKr_cNFkrX1IlRy_k';
+const SUPABASE_BUCKET = 'photos';
 
-// --- Загрузка фото в слайдшоу через ImgBB ---
+async function supabaseUpload(file) {
+  const filename = `${Date.now()}_${file.name}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${encodeURIComponent(filename)}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': file.type || 'application/octet-stream',
+    },
+    body: file
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Supabase upload failed: ${res.status}`);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(filename)}`;
+}
+
+// --- Загрузка фото в слайдшоу через Supabase Storage ---
 async function uploadPhoto(file) {
   const uploadStatus = document.getElementById('uploadStatus');
   const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
@@ -301,18 +320,8 @@ async function uploadPhoto(file) {
     uploadStatus.textContent = 'Загрузка...';
     uploadPhotoBtn.disabled = true;
 
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('key', IMGBB_API_KEY);
+    const url = await supabaseUpload(file);
 
-    const res = await fetch('https://api.imgbb.com/1/upload', {
-      method: 'POST',
-      body: formData
-    });
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error?.message || 'ImgBB error');
-
-    const url = json.data.url;
     await db.collection('photos').add({
       url,
       uploadedBy: firebase.auth().currentUser.email,
@@ -736,26 +745,11 @@ function renderSlideshow(photoUrls) {
   window.startSlideshowInterval();
 }
 
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/korevykh/start_journey_timer/main/assets/photo-presentation/';
-
 window.loadSlideshowPhotos = async function() {
   try {
-    // Базовые фото из репозитория (GitHub raw CDN)
-    const basePhotos = await fetch('assets/photo-presentation/photos.json')
-      .then(r => r.json())
-      .then(names => names.map(n => GITHUB_RAW_BASE + n))
-      .catch(() => []);
-
-    // Фото загруженные пользователями (Firestore)
-    let userPhotos = [];
-    try {
-      const snapshot = await db.collection('photos').orderBy('createdAt', 'asc').get();
-      userPhotos = snapshot.docs.map(d => d.data().url);
-    } catch (e) {
-      console.warn('Firestore недоступен, показываем только базовые фото:', e.message);
-    }
-
-    renderSlideshow([...basePhotos, ...userPhotos]);
+    const snapshot = await db.collection('photos').orderBy('createdAt', 'asc').get();
+    const photos = snapshot.docs.map(d => d.data().url);
+    renderSlideshow(photos);
   } catch (err) {
     console.error('Ошибка загрузки фотографий для слайд-шоу:', err);
   }

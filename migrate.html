@@ -28,7 +28,8 @@
     <span id="authStatus" style="color:#aaa;"></span>
   </div>
 
-  <button id="startBtn" onclick="startMigration()" disabled>▶ Запустить миграцию</button>
+  <button id="startBtn" onclick="startMigration(false)" disabled>▶ Запустить миграцию</button>
+  <button id="forceBtn" onclick="startMigration(true)" disabled style="background:#ff6a6a;">🗑 Очистить Firestore и мигрировать заново</button>
 
   <div id="log"></div>
 
@@ -36,7 +37,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    const IMGBB_API_KEY = '1ad85acd3ced435a12c44950e9e62d72';
+    const SUPABASE_URL = 'https://mjbvsmvghqubdwkfgyvg.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qYnZzbXZnaHF1YmR3a2ZneXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Mzk5NTUsImV4cCI6MjA4NzUxNTk1NX0.s0WMpvN7M6ieg5l1tg3mVkcIXjUKr_cNFkrX1IlRy_k';
+    const SUPABASE_BUCKET = 'photos';
 
     firebase.initializeApp({
       apiKey: "AIzaSyDagIJQMr_I6i6T_ZdkGwk09lIOZmgoKcQ",
@@ -72,6 +75,7 @@
         document.getElementById('authStatus').textContent = '✓ Авторизован';
         document.getElementById('authStatus').style.color = '#38ef7d';
         document.getElementById('startBtn').disabled = false;
+        document.getElementById('forceBtn').disabled = false;
         document.getElementById('loginBtn').disabled = true;
       } catch (e) {
         log(`✗ Ошибка входа [${e.code}]: ${e.message}`, 'err');
@@ -80,8 +84,9 @@
       }
     }
 
-    async function startMigration() {
+    async function startMigration(force = false) {
       document.getElementById('startBtn').disabled = true;
+      document.getElementById('forceBtn').disabled = true;
       document.getElementById('log').innerHTML = '';
 
       // 1. Загружаем список фото
@@ -95,23 +100,34 @@
       } catch (e) {
         log(`✗ Не удалось загрузить photos.json: ${e.message}`, 'err');
         document.getElementById('startBtn').disabled = false;
+        document.getElementById('forceBtn').disabled = false;
         return;
       }
 
-      // 2. Проверяем уже загруженные (по originalName)
+      // 2. Проверяем / очищаем Firestore
       log('\nШаг 2: проверяем Firestore...', 'info');
       const existing = new Set();
       try {
         const snap = await db.collection('photos').get();
         log(`  Документов в коллекции photos: ${snap.size}`, 'info');
-        snap.forEach(doc => {
-          const name = doc.data().originalName;
-          if (name) existing.add(name);
-        });
-        log(`  Уже загружено: ${existing.size} фото`, 'info');
+
+        if (force && snap.size > 0) {
+          log(`  Удаляем ${snap.size} старых записей...`, 'info');
+          const batch = db.batch();
+          snap.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+          log(`  ✓ Firestore очищен`, 'ok');
+        } else {
+          snap.forEach(doc => {
+            const name = doc.data().originalName;
+            if (name) existing.add(name);
+          });
+          log(`  Уже загружено: ${existing.size} фото`, 'info');
+        }
       } catch (e) {
         log(`✗ Ошибка Firestore [${e.code}]: ${e.message}`, 'err');
         document.getElementById('startBtn').disabled = false;
+        document.getElementById('forceBtn').disabled = false;
         return;
       }
 
@@ -132,17 +148,21 @@
           const blob = await fetchRes.blob();
           log(`  ↑  ${filename} (${(blob.size / 1024).toFixed(0)} KB) → ImgBB...`, 'info');
 
-          // Загружаем на ImgBB
-          const formData = new FormData();
-          formData.append('image', blob, filename);
-          formData.append('key', IMGBB_API_KEY);
-          const imgRes = await fetch('https://api.imgbb.com/1/upload', {
+          // Загружаем в Supabase Storage
+          const storageName = `${Date.now()}_${filename}`;
+          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${encodeURIComponent(storageName)}`, {
             method: 'POST',
-            body: formData
+            headers: {
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': blob.type || 'image/jpeg',
+            },
+            body: blob
           });
-          const imgJson = await imgRes.json();
-          if (!imgJson.success) throw new Error(imgJson.error?.message || 'ImgBB вернул ошибку');
-          const url = imgJson.data.url;
+          if (!uploadRes.ok) {
+            const errJson = await uploadRes.json().catch(() => ({}));
+            throw new Error(errJson.message || `Supabase upload failed: ${uploadRes.status}`);
+          }
+          const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(storageName)}`;
 
           // Сохраняем в Firestore
           await db.collection('photos').add({
@@ -167,6 +187,7 @@
       log(`\n=== Итог: загружено ${uploaded}, пропущено ${skipped}, ошибок ${failed} ===`,
         failed === 0 ? 'ok' : 'err');
       document.getElementById('startBtn').disabled = false;
+      document.getElementById('forceBtn').disabled = false;
     }
   </script>
 </body>
