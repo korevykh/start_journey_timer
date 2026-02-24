@@ -733,7 +733,19 @@ function renderSlideshow(photoUrls) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = `Фото ${idx + 1}`;
-    img.onerror = function() { slideDiv.style.display = 'none'; };
+    img.onerror = function() {
+      slideDiv.remove();
+      const dots = document.querySelectorAll('.dots .dot');
+      if (dots[idx]) dots[idx].remove();
+      // Пересчитываем индексы точек
+      document.querySelectorAll('.dots .dot').forEach((dot, i) => {
+        dot.onclick = function() { window.currentSlide(i + 1); };
+      });
+      if (slideIndex > document.querySelectorAll('.slideshow-container .slide').length) {
+        slideIndex = 1;
+      }
+      window.showSlides(slideIndex);
+    };
     slideDiv.appendChild(img);
     const prevBtn = slideshowContainer.querySelector('.prev');
     slideshowContainer.insertBefore(slideDiv, prevBtn);
