@@ -327,7 +327,6 @@ async function uploadPhoto(file) {
     setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
     window.loadSlideshowPhotos();
   } catch (err) {
-    console.error('Ошибка загрузки фото:', err);
     uploadStatus.style.color = '#ff6a6a';
     uploadStatus.textContent = 'Ошибка: ' + err.message;
   } finally {
@@ -766,9 +765,7 @@ function renderSlideshow(photoUrls) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = `Фото ${idx + 1}`;
-    img.onload = function() { console.log('[Slide] OK:', src); };
     img.onerror = function() {
-      console.error('[Slide] FAIL:', src);
       slideDiv.remove();
       const dots = document.querySelectorAll('.dots .dot');
       if (dots[idx]) dots[idx].remove();
@@ -804,18 +801,13 @@ window.loadSlideshowPhotos = async function() {
       body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'created_at', order: 'asc' } })
     });
     const files = await res.json();
-    console.log('[Slideshow] files from Supabase:', files);
-    if (!Array.isArray(files)) {
-      console.error('[Slideshow] Ожидался массив, получено:', files);
-      return;
-    }
+    if (!Array.isArray(files)) return;
     const photos = files
       .filter(f => f.name && !f.name.endsWith('/'))
       .map(f => `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(f.name)}`);
-    console.log('[Slideshow] photo URLs:', photos);
     renderSlideshow(photos);
-  } catch (err) {
-    console.error('Ошибка загрузки фотографий для слайд-шоу:', err);
+  } catch {
+    // silent
   }
 }
 
