@@ -344,12 +344,28 @@ window.addEventListener('DOMContentLoaded', function() {
       if (this.files && this.files[0]) {
         const file = this.files[0];
         const uploadStatus = document.getElementById('uploadStatus');
-        createImageBitmap(file).then(() => {
-          uploadPhoto(file);
-          photoFileInput.value = '';
+        uploadStatus.style.color = '#38ef7d';
+        uploadStatus.textContent = 'Обработка...';
+        const MAX_SIZE = 1920;
+        createImageBitmap(file).then(bitmap => {
+          const canvas = document.createElement('canvas');
+          let w = bitmap.width, h = bitmap.height;
+          if (w > MAX_SIZE || h > MAX_SIZE) {
+            if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+            else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+          bitmap.close();
+          canvas.toBlob(blob => {
+            const jpegFile = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+            uploadPhoto(jpegFile);
+            photoFileInput.value = '';
+          }, 'image/jpeg', 0.92);
         }).catch(() => {
           uploadStatus.style.color = '#ff6a6a';
-          uploadStatus.textContent = 'Формат не поддерживается браузером (вероятно HEIC). Настройки → Камера → Форматы → Наиболее совместимый';
+          uploadStatus.textContent = 'Формат не поддерживается. Измени в iPhone: Настройки → Камера → Форматы → Наиболее совместимый';
           photoFileInput.value = '';
         });
       }
