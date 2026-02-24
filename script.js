@@ -12,7 +12,7 @@ firebase.initializeApp(firebaseConfig);
 // --- КОНЕЦ ИНИЦИАЛИЗАЦИИ ---
 
 // Устанавливаем целевую дату (18 июля 2025, 20:30 UTC+3)
-const targetDate = new Date('2025-07-18T20:30:00+03:00');
+const targetDate = new Date('2026-07-23T20:35:00+03:00');
 
 function updateTimer() {
     const currentDate = new Date();
@@ -199,7 +199,9 @@ if (menuLogout) menuLogout.onclick = function() {
 
 // Обновление панели пользователя при изменении авторизации
 firebase.auth().onAuthStateChanged(user => {
+  const uploadBlock = document.getElementById('uploadPhotoBlock');
   if (user) {
+    if (uploadBlock) uploadBlock.style.display = '';
     if (userEmail) {
       userEmail.textContent = user.email;
       userEmail.style.display = window.innerWidth >= 600 ? '' : 'none';
@@ -224,6 +226,7 @@ firebase.auth().onAuthStateChanged(user => {
       menuEmail.style.display = 'none';
     }
   } else {
+    if (uploadBlock) uploadBlock.style.display = 'none';
     if (userEmail) {
       userEmail.textContent = '';
       userEmail.style.display = 'none';
@@ -286,6 +289,62 @@ firebase.auth().onAuthStateChanged(user => {
 
 const db = firebase.firestore();
 const riversCollection = db.collection('rivers');
+
+const IMGBB_API_KEY = '1ad85acd3ced435a12c44950e9e62d72';
+
+// --- Загрузка фото в слайдшоу через ImgBB ---
+async function uploadPhoto(file) {
+  const uploadStatus = document.getElementById('uploadStatus');
+  const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+  try {
+    uploadStatus.style.color = '#38ef7d';
+    uploadStatus.textContent = 'Загрузка...';
+    uploadPhotoBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('key', IMGBB_API_KEY);
+
+    const res = await fetch('https://api.imgbb.com/1/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error?.message || 'ImgBB error');
+
+    const url = json.data.url;
+    await db.collection('photos').add({
+      url,
+      uploadedBy: firebase.auth().currentUser.email,
+      originalName: file.name,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    uploadStatus.textContent = 'Фото загружено!';
+    setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
+    window.loadSlideshowPhotos();
+  } catch (err) {
+    console.error('Ошибка загрузки фото:', err);
+    uploadStatus.style.color = '#ff6a6a';
+    uploadStatus.textContent = 'Ошибка: ' + err.message;
+  } finally {
+    uploadPhotoBtn.disabled = false;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+  const photoFileInput = document.getElementById('photoFileInput');
+  if (uploadPhotoBtn && photoFileInput) {
+    uploadPhotoBtn.addEventListener('click', () => photoFileInput.click());
+    photoFileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        uploadPhoto(this.files[0]);
+        this.value = '';
+      }
+    });
+  }
+});
 
 const addEditFormTitle = document.getElementById('addEditFormTitle');
 const saveRiverBtn = document.getElementById('saveRiverBtn');
@@ -653,40 +712,53 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 // --- Динамическая загрузка фотографий для слайд-шоу ---
-window.loadSlideshowPhotos = function() {
-  fetch('assets/photo-presentation/photos.json')
-    .then(response => response.json())
-    .then(photos => {
-      const slideshowContainer = document.querySelector('.slideshow-container');
-      const dotsContainer = document.querySelector('.dots');
-      if (!slideshowContainer || !dotsContainer) return;
-      // Удаляем старые слайды и точки
-      slideshowContainer.querySelectorAll('.slide').forEach(e => e.remove());
-      dotsContainer.innerHTML = '';
-      // Добавляем новые слайды
-      photos.forEach((photo, idx) => {
-        const slideDiv = document.createElement('div');
-        slideDiv.className = 'slide fade';
-        const img = document.createElement('img');
-        img.src = `assets/photo-presentation/${photo}`;
-        img.alt = `Фото ${idx+1}`;
-        slideDiv.appendChild(img);
-        // Вставляем перед кнопками prev/next
-        const prevBtn = slideshowContainer.querySelector('.prev');
-        slideshowContainer.insertBefore(slideDiv, prevBtn);
-        // Точка
-        const dot = document.createElement('span');
-        dot.className = 'dot';
-        dot.onclick = function() { window.currentSlide(idx+1); };
-        dotsContainer.appendChild(dot);
-      });
-      // Показываем первый слайд
-      window.showSlides(slideIndex = 1);
-      window.startSlideshowInterval();
-    })
-    .catch(err => {
-      console.error('Ошибка загрузки фотографий для слайд-шоу:', err);
-    });
+function renderSlideshow(photoUrls) {
+  const slideshowContainer = document.querySelector('.slideshow-container');
+  const dotsContainer = document.querySelector('.dots');
+  if (!slideshowContainer || !dotsContainer) return;
+  slideshowContainer.querySelectorAll('.slide').forEach(e => e.remove());
+  dotsContainer.innerHTML = '';
+  photoUrls.forEach((src, idx) => {
+    const slideDiv = document.createElement('div');
+    slideDiv.className = 'slide fade';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Фото ${idx + 1}`;
+    slideDiv.appendChild(img);
+    const prevBtn = slideshowContainer.querySelector('.prev');
+    slideshowContainer.insertBefore(slideDiv, prevBtn);
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.onclick = function() { window.currentSlide(idx + 1); };
+    dotsContainer.appendChild(dot);
+  });
+  window.showSlides(slideIndex = 1);
+  window.startSlideshowInterval();
+}
+
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/korevykh/start_journey_timer/main/assets/photo-presentation/';
+
+window.loadSlideshowPhotos = async function() {
+  try {
+    // Базовые фото из репозитория (GitHub raw CDN)
+    const basePhotos = await fetch('assets/photo-presentation/photos.json')
+      .then(r => r.json())
+      .then(names => names.map(n => GITHUB_RAW_BASE + n))
+      .catch(() => []);
+
+    // Фото загруженные пользователями (Firestore)
+    let userPhotos = [];
+    try {
+      const snapshot = await db.collection('photos').orderBy('createdAt', 'asc').get();
+      userPhotos = snapshot.docs.map(d => d.data().url);
+    } catch (e) {
+      console.warn('Firestore недоступен, показываем только базовые фото:', e.message);
+    }
+
+    renderSlideshow([...basePhotos, ...userPhotos]);
+  } catch (err) {
+    console.error('Ошибка загрузки фотографий для слайд-шоу:', err);
+  }
 }
 
 // --- JS для плеера (перенос из index.html) ---

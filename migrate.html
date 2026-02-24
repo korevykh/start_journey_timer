@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Миграция фото → ImgBB</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #eee; padding: 2rem; }
+    h2 { color: #38ef7d; }
+    button { padding: 0.7rem 1.5rem; font-size: 1rem; background: #38ef7d; color: #222; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; margin-bottom: 1.5rem; }
+    button:disabled { background: #555; color: #999; cursor: not-allowed; }
+    #log { white-space: pre-wrap; line-height: 1.7; max-height: 70vh; overflow-y: auto; border: 1px solid #333; padding: 1rem; border-radius: 8px; }
+    .ok   { color: #38ef7d; }
+    .err  { color: #ff6a6a; }
+    .info { color: #aaa; }
+    #authBlock { margin-bottom: 1.5rem; }
+    input[type=email], input[type=password] { padding: 0.5rem 0.8rem; border-radius: 6px; border: 1px solid #555; background: #222; color: #fff; margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h2>Миграция фото в ImgBB + Firestore</h2>
+  <p class="info">Войдите, затем запустите миграцию.<br>
+  Уже загруженные фото (по имени файла) будут пропущены.</p>
+
+  <div id="authBlock">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Пароль">
+    <button id="loginBtn" onclick="doLogin()">Войти</button>
+    <span id="authStatus" style="color:#aaa;"></span>
+  </div>
+
+  <button id="startBtn" onclick="startMigration()" disabled>▶ Запустить миграцию</button>
+
+  <div id="log"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    const IMGBB_API_KEY = '1ad85acd3ced435a12c44950e9e62d72';
+
+    firebase.initializeApp({
+      apiKey: "AIzaSyDagIJQMr_I6i6T_ZdkGwk09lIOZmgoKcQ",
+      authDomain: "riverhedgehogs.firebaseapp.com",
+      projectId: "riverhedgehogs",
+      storageBucket: "riverhedgehogs.firebasestorage.app",
+      messagingSenderId: "101156697117",
+      appId: "1:101156697117:web:755e1e1457a5d0ed9942f4"
+    });
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    function log(msg, cls = '') {
+      const div = document.getElementById('log');
+      const ts = new Date().toLocaleTimeString('ru', { hour12: false });
+      div.innerHTML += `<span style="color:#555">[${ts}]</span> <span class="${cls}">${msg}</span>\n`;
+      div.scrollTop = div.scrollHeight;
+      console.log(`[${ts}] ${msg}`);
+    }
+
+    window.addEventListener('unhandledrejection', e => {
+      log('НЕОБРАБОТАННАЯ ОШИБКА: ' + (e.reason?.message || e.reason), 'err');
+    });
+
+    async function doLogin() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      log(`Вход: ${email}`, 'info');
+      try {
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        log(`✓ Авторизован: ${cred.user.email}`, 'ok');
+        document.getElementById('authStatus').textContent = '✓ Авторизован';
+        document.getElementById('authStatus').style.color = '#38ef7d';
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('loginBtn').disabled = true;
+      } catch (e) {
+        log(`✗ Ошибка входа [${e.code}]: ${e.message}`, 'err');
+        document.getElementById('authStatus').textContent = 'Ошибка: ' + e.message;
+        document.getElementById('authStatus').style.color = '#ff6a6a';
+      }
+    }
+
+    async function startMigration() {
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('log').innerHTML = '';
+
+      // 1. Загружаем список фото
+      log('Шаг 1: загружаем photos.json...', 'info');
+      let photos;
+      try {
+        const res = await fetch('assets/photo-presentation/photos.json');
+        log(`  HTTP статус: ${res.status}`, res.ok ? 'info' : 'err');
+        photos = await res.json();
+        log(`  Найдено ${photos.length} фото`, 'info');
+      } catch (e) {
+        log(`✗ Не удалось загрузить photos.json: ${e.message}`, 'err');
+        document.getElementById('startBtn').disabled = false;
+        return;
+      }
+
+      // 2. Проверяем уже загруженные (по originalName)
+      log('\nШаг 2: проверяем Firestore...', 'info');
+      const existing = new Set();
+      try {
+        const snap = await db.collection('photos').get();
+        log(`  Документов в коллекции photos: ${snap.size}`, 'info');
+        snap.forEach(doc => {
+          const name = doc.data().originalName;
+          if (name) existing.add(name);
+        });
+        log(`  Уже загружено: ${existing.size} фото`, 'info');
+      } catch (e) {
+        log(`✗ Ошибка Firestore [${e.code}]: ${e.message}`, 'err');
+        document.getElementById('startBtn').disabled = false;
+        return;
+      }
+
+      // 3. Мигрируем
+      log('\nШаг 3: загрузка на ImgBB...', 'info');
+      let uploaded = 0, skipped = 0, failed = 0;
+
+      for (const filename of photos) {
+        if (existing.has(filename)) {
+          log(`  ⏭  пропущен: ${filename}`, 'info');
+          skipped++;
+          continue;
+        }
+        try {
+          // Фетчим локальный файл
+          const fetchRes = await fetch(`assets/photo-presentation/${filename}`);
+          if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status} при загрузке файла`);
+          const blob = await fetchRes.blob();
+          log(`  ↑  ${filename} (${(blob.size / 1024).toFixed(0)} KB) → ImgBB...`, 'info');
+
+          // Загружаем на ImgBB
+          const formData = new FormData();
+          formData.append('image', blob, filename);
+          formData.append('key', IMGBB_API_KEY);
+          const imgRes = await fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+          });
+          const imgJson = await imgRes.json();
+          if (!imgJson.success) throw new Error(imgJson.error?.message || 'ImgBB вернул ошибку');
+          const url = imgJson.data.url;
+
+          // Сохраняем в Firestore
+          await db.collection('photos').add({
+            url,
+            uploadedBy: auth.currentUser.email,
+            originalName: filename,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          log(`  ✓  ${filename} → ${url}`, 'ok');
+          uploaded++;
+
+          // Небольшая пауза чтобы не заспамить API
+          await new Promise(r => setTimeout(r, 300));
+        } catch (e) {
+          log(`  ✗  ошибка (${filename}): ${e.message}`, 'err');
+          console.error(e);
+          failed++;
+        }
+      }
+
+      log(`\n=== Итог: загружено ${uploaded}, пропущено ${skipped}, ошибок ${failed} ===`,
+        failed === 0 ? 'ok' : 'err');
+      document.getElementById('startBtn').disabled = false;
+    }
+  </script>
+</body>
+</html>

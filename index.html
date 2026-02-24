@@ -136,10 +136,28 @@
                     </div>
                 </div>
             </div>
-            <img src="assets/маршрут.png" alt="Маршрут" class="route-image">
+            <!-- Виджет маршрута с табами -->
+            <div class="route-widget">
+              <div class="route-tabs">
+                <button class="route-tab-btn active" onclick="switchRouteTab(this, 'routeTab1')">Полта</button>
+                <button class="route-tab-btn" onclick="switchRouteTab(this, 'routeTab2')">Ундоша</button>
+              </div>
+              <div id="routeTab1" class="route-tab-panel active">
+                <img src="assets/route/Полта.jpg" alt="Полта" class="route-image">
+              </div>
+              <div id="routeTab2" class="route-tab-panel">
+                <img src="assets/route/маршрут.png" alt="Маршрут" class="route-image">
+              </div>
+            </div>
             
             <h2>ЛЕГЕНДЫ ЕЖЕЙ</h2>
-            
+
+            <div id="uploadPhotoBlock" style="display:none; text-align:center; margin-bottom:1rem;">
+              <input type="file" id="photoFileInput" accept="image/*" style="display:none">
+              <button id="uploadPhotoBtn" style="padding:0.6rem 1.5rem;font-size:1rem;font-weight:700;background:#38ef7d;color:#222;border:none;border-radius:10px;cursor:pointer;font-family:'Montserrat',Arial,sans-serif;">+ Загрузить фото</button>
+              <div id="uploadStatus" style="margin-top:0.5rem;font-size:0.95rem;color:#38ef7d;"></div>
+            </div>
+
             <div class="slideshow-container">
                 <!-- Слайды будут добавляться динамически -->
                 <a class="prev" onclick="plusSlides(-1)">❮</a>
@@ -264,5 +282,25 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="script.js"></script>
+    <script>
+      function switchRouteTab(btn, tabId) {
+        document.querySelectorAll('.route-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.route-tab-panel').forEach(p => {
+          p.classList.remove('active');
+          p.style.display = 'none';
+        });
+        btn.classList.add('active');
+        const panel = document.getElementById(tabId);
+        panel.classList.add('active');
+        panel.style.display = 'block';
+      }
+
+      // Инициализация — скрываем неактивные панели сразу
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.route-tab-panel').forEach(p => {
+          p.style.display = p.classList.contains('active') ? 'block' : 'none';
+        });
+      });
+    </script>
 </body>
 </html> 
