@@ -733,6 +733,7 @@ function renderSlideshow(photoUrls) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = `Фото ${idx + 1}`;
+    img.onerror = function() { slideDiv.style.display = 'none'; };
     slideDiv.appendChild(img);
     const prevBtn = slideshowContainer.querySelector('.prev');
     slideshowContainer.insertBefore(slideDiv, prevBtn);
