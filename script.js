@@ -727,7 +727,9 @@ function renderSlideshow(photoUrls) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = `Фото ${idx + 1}`;
+    img.onload = function() { console.log('[Slide] OK:', src); };
     img.onerror = function() {
+      console.error('[Slide] FAIL:', src);
       slideDiv.remove();
       const dots = document.querySelectorAll('.dots .dot');
       if (dots[idx]) dots[idx].remove();
