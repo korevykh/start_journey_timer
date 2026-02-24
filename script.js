@@ -343,24 +343,15 @@ window.addEventListener('DOMContentLoaded', function() {
     photoFileInput.addEventListener('change', function() {
       if (this.files && this.files[0]) {
         const file = this.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const bytes = new Uint8Array(e.target.result);
-          // HEIC/HEIF: bytes 4-7 = "ftyp", bytes 8-11 содержат бренд hei/mif
-          const ftyp = bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
-          const brand = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]);
-          const isHeic = ftyp && (brand.startsWith('hei') || brand.startsWith('mif') || brand.startsWith('hev'));
-          if (isHeic) {
-            const uploadStatus = document.getElementById('uploadStatus');
-            uploadStatus.style.color = '#ff6a6a';
-            uploadStatus.textContent = 'HEIC формат не поддерживается. Измени формат камеры: Настройки → Камера → Форматы → Наиболее совместимый';
-            photoFileInput.value = '';
-            return;
-          }
+        const uploadStatus = document.getElementById('uploadStatus');
+        createImageBitmap(file).then(() => {
           uploadPhoto(file);
           photoFileInput.value = '';
-        };
-        reader.readAsArrayBuffer(file.slice(0, 12));
+        }).catch(() => {
+          uploadStatus.style.color = '#ff6a6a';
+          uploadStatus.textContent = 'Формат не поддерживается браузером (вероятно HEIC). Настройки → Камера → Форматы → Наиболее совместимый';
+          photoFileInput.value = '';
+        });
       }
     });
   }
