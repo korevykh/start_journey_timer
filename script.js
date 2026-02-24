@@ -296,11 +296,14 @@ const SUPABASE_BUCKET = 'photos';
 
 async function supabaseUpload(file) {
   const filename = `${Date.now()}_${file.name}`;
+  const contentType = file.type && file.type.startsWith('image/') 
+    ? file.type 
+    : 'image/jpeg';
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${encodeURIComponent(filename)}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': file.type || 'application/octet-stream',
+      'Content-Type': contentType,
     },
     body: file
   });
@@ -760,9 +763,15 @@ window.loadSlideshowPhotos = async function() {
       body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'created_at', order: 'asc' } })
     });
     const files = await res.json();
+    console.log('[Slideshow] files from Supabase:', files);
+    if (!Array.isArray(files)) {
+      console.error('[Slideshow] Ожидался массив, получено:', files);
+      return;
+    }
     const photos = files
       .filter(f => f.name && !f.name.endsWith('/'))
       .map(f => `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(f.name)}`);
+    console.log('[Slideshow] photo URLs:', photos);
     renderSlideshow(photos);
   } catch (err) {
     console.error('Ошибка загрузки фотографий для слайд-шоу:', err);
