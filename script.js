@@ -342,7 +342,17 @@ window.addEventListener('DOMContentLoaded', function() {
     uploadPhotoBtn.addEventListener('click', () => photoFileInput.click());
     photoFileInput.addEventListener('change', function() {
       if (this.files && this.files[0]) {
-        uploadPhoto(this.files[0]);
+        const file = this.files[0];
+        const isHeic = file.type === 'image/heic' || file.type === 'image/heif' 
+          || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+        if (isHeic) {
+          const uploadStatus = document.getElementById('uploadStatus');
+          uploadStatus.style.color = '#ff6a6a';
+          uploadStatus.textContent = 'HEIC формат не поддерживается. Используй Safari или измени формат камеры на JPEG.';
+          this.value = '';
+          return;
+        }
+        uploadPhoto(file);
         this.value = '';
       }
     });
