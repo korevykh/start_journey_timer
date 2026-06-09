@@ -789,16 +789,13 @@ window.loadSlideshowPhotos = async function() {
       body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'created_at', order: 'asc' } })
     });
     const files = await res.json();
-    if (!Array.isArray(files)) {
-      console.error('[Slideshow] bad response:', files);
-      return;
-    }
+    if (!Array.isArray(files)) return;
     const photos = files
       .filter(f => f.name && !f.name.endsWith('/'))
       .map(f => `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(f.name)}`);
     renderSlideshow(photos);
-  } catch (err) {
-    console.error('[Slideshow] error:', err);
+  } catch {
+    // silent
   }
 }
 
