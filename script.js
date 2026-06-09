@@ -58,7 +58,6 @@ const authPassword = document.getElementById('authPassword');
 const authPasswordRepeat = document.getElementById('authPasswordRepeat');
 const togglePassword = document.getElementById('togglePassword');
 const togglePasswordRepeat = document.getElementById('togglePasswordRepeat');
-const googleAuthBtn = document.getElementById('googleAuthBtn');
 const authModalTitle = document.querySelector('#authModal h3');
 
 function showAuthModal(isRegister = false) {
@@ -153,17 +152,6 @@ registerBtn.onclick = async function() {
   }
 };
 
-if (googleAuthBtn) {
-  googleAuthBtn.onclick = async function() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-      await firebase.auth().signInWithPopup(provider);
-      hideAuthModal();
-    } catch (e) {
-      authError.textContent = translateAuthError(e);
-    }
-  };
-}
 // --- END Firebase Auth Modal ---
 
 // --- User Icon & Dropdown Menu ---
